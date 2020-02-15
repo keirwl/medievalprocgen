@@ -1,0 +1,11 @@
+As a worldbuilding-obsessed teenager, I discovered S. John Ross's "Medieval Demographics Made Easy" [1] which explains how to create "realistic" population numbers for medieval European fantasy countries and cities using dice rolls.
+As a beginning programmer in my early 20s I wrote a Python script to simulate fantasy countries using its methods.
+As a more-experienced programmer in my late 20s, I'm trying to expand the idea to experiment with procedural generation.
+Eventually I want it to be a dynamic simulation of the economics of a medieval European fantasy kingdom, loosely based on those of Mount & Blade. [2]
+
+Assets not included in this repository are CuddlyClover's Fantasy Hex Tiles [3] and Nathan P's ttf Runescape font. [4]
+
+[1] https://gamingballistic.com/wp-content/uploads/2018/11/Medieval-Demographics-Made-Easy-1.pdf
+[2] https://www.reddit.com/r/mountandblade/comments/3ynfnj/the_genius_behind_the_warband_economy/
+[3] https://cuddlyclover.itch.io/fantasy-hex-tiles
+[4] https://www.dafont.com/runescape-uf.font
