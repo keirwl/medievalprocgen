@@ -21,13 +21,14 @@ const (
 var (
 	spritesheet pixel.Picture
 	tiles       = make([]pixel.Rect, Max)
-	initialised bool
+	Batch       *pixel.Batch
 )
 
-func New() (batch *pixel.Batch, err error) {
+func init() {
+	var err error
 	spritesheet, err = loadPicture(tilesetFilename)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
 	var t TileType
@@ -43,15 +44,10 @@ outer:
 		}
 	}
 
-	batch = pixel.NewBatch(&pixel.TrianglesData{}, spritesheet)
-	initialised = true
-	return batch, nil
+	Batch = pixel.NewBatch(&pixel.TrianglesData{}, spritesheet)
 }
 
 func Sprite(t TileType) *pixel.Sprite {
-	if !initialised {
-		panic("tilemap spritesheet has not been initialised!")
-	}
 	return pixel.NewSprite(spritesheet, tiles[t])
 }
 

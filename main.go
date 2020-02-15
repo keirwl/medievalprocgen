@@ -7,8 +7,10 @@ import (
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
+	"github.com/faiface/pixel/text"
 	"golang.org/x/image/colornames"
 
+	"./rsfont"
 	"./tilemap"
 )
 
@@ -17,6 +19,11 @@ const (
 	minZoom      = 1.0
 	maxZoom      = 10.0
 	camZoomSpeed = 1.2
+)
+
+var (
+	camPos  = pixel.ZV
+	camZoom = minZoom
 )
 
 func run() {
@@ -31,9 +38,9 @@ func run() {
 		panic(err)
 	}
 
-	batch, err := tilemap.New()
-	if err != nil {
-		panic(err)
+	testText := rsfont.NewText(pixel.ZV)
+	for _, r := range text.ASCII {
+		testText.WriteRune(r)
 	}
 
 	var (
@@ -52,11 +59,12 @@ func run() {
 		if win.JustPressed(pixelgl.MouseButtonLeft) {
 			tile := tilemap.Random()
 			mouse := cam.Unproject(win.MousePosition())
-			tile.Draw(batch, pixel.IM.Moved(mouse))
+			tile.Draw(tilemap.Batch, pixel.IM.Moved(mouse))
 		}
 
 		win.Clear(colornames.Aliceblue)
-		batch.Draw(win)
+		tilemap.Batch.Draw(win)
+		testText.Draw(win, pixel.IM)
 		win.Update()
 
 		frames++
@@ -68,11 +76,6 @@ func run() {
 		}
 	}
 }
-
-var (
-	camPos  = pixel.ZV
-	camZoom = minZoom
-)
 
 func zoomAndScroll(win *pixelgl.Window, dt float64) pixel.Matrix {
 	camZoom *= math.Pow(camZoomSpeed, win.MouseScroll().Y)
