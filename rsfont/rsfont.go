@@ -8,32 +8,42 @@ import (
 	"github.com/faiface/pixel/text"
 	"github.com/golang/freetype/truetype"
 	"golang.org/x/image/colornames"
-	"golang.org/x/image/font"
 )
 
 const (
 	fontFilename = "assets/runescape_uf.ttf"
-	fontSize     = 24
 )
 
-var atlas *text.Atlas
+var face *truetype.Font
+var atlases map[float64]*text.Atlas
 
 func init() {
-	face, err := loadTTF(fontFilename, fontSize)
+	var err error
+	face, err = loadTTF(fontFilename)
 	if err != nil {
 		panic(err)
 	}
 
-	atlas = text.NewAtlas(face, text.ASCII)
+	atlases = make(map[float64]*text.Atlas)
 }
 
-func NewText(v pixel.Vec) *text.Text {
+func NewText(v pixel.Vec, size float64) *text.Text {
+	var atlas *text.Atlas
+	atlas, ok := atlases[size]
+	if !ok {
+		atlas = text.NewAtlas(truetype.NewFace(face, &truetype.Options{
+			Size:              size,
+			GlyphCacheEntries: 1,
+		}), text.ASCII)
+		atlases[size] = atlas
+	}
+
 	t := text.New(v, atlas)
 	t.Color = colornames.Black
 	return t
 }
 
-func loadTTF(path string, size float64) (font.Face, error) {
+func loadTTF(path string) (*truetype.Font, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
@@ -45,13 +55,5 @@ func loadTTF(path string, size float64) (font.Face, error) {
 		return nil, err
 	}
 
-	font, err := truetype.Parse(bytes)
-	if err != nil {
-		return nil, err
-	}
-
-	return truetype.NewFace(font, &truetype.Options{
-		Size:              size,
-		GlyphCacheEntries: 1,
-	}), nil
+	return truetype.Parse(bytes)
 }
