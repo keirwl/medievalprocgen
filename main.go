@@ -6,12 +6,12 @@ import (
 	"time"
 
 	"github.com/faiface/pixel"
+	"github.com/faiface/pixel/imdraw"
 	"github.com/faiface/pixel/pixelgl"
-	"github.com/faiface/pixel/text"
 	"golang.org/x/image/colornames"
 
+	"./hex"
 	"./rsfont"
-	"./tilemap"
 )
 
 const (
@@ -26,6 +26,10 @@ var (
 	camZoom = minZoom
 )
 
+func init() {
+	hex.Size = pixel.V(16, 16)
+}
+
 func run() {
 	screenWidth, screenHeight := pixelgl.PrimaryMonitor().Size()
 	cfg := pixelgl.WindowConfig{
@@ -38,9 +42,21 @@ func run() {
 		panic(err)
 	}
 
-	testText := rsfont.NewText(pixel.ZV)
-	for _, r := range text.ASCII {
-		testText.WriteRune(r)
+	toolTip := rsfont.NewText(pixel.ZV, 22)
+
+	testDraw := imdraw.New(nil)
+
+	testDraw.Color = colornames.Black
+
+	hexGrid := hex.Grid(5, 5)
+
+	for h, _ := range hexGrid {
+		corners := h.Corners()
+		for _, c := range corners {
+			testDraw.Push(c)
+		}
+		testDraw.Push(corners[0])
+		testDraw.Line(1)
 	}
 
 	var (
@@ -56,15 +72,28 @@ func run() {
 		cam := zoomAndScroll(win, dt)
 		win.SetMatrix(cam)
 
-		if win.JustPressed(pixelgl.MouseButtonLeft) {
-			tile := tilemap.Random()
-			mouse := cam.Unproject(win.MousePosition())
-			tile.Draw(tilemap.Batch, pixel.IM.Moved(mouse))
-		}
+		//		if win.JustPressed(pixelgl.MouseButtonLeft) {
+		//			tile := tilemap.Random()
+		//			mouse := cam.Unproject(win.MousePosition())
+		//			tile.Draw(tilemap.Batch, pixel.IM.Moved(mouse))
+		//		}
+
+		toolTip.Clear()
+		mousePos := win.MousePosition()
+		toolTip.Orig = cam.Unproject(mousePos)
+		fmt.Fprintf(toolTip, "(%.f, %.f)", mousePos.X, mousePos.Y)
 
 		win.Clear(colornames.Aliceblue)
-		tilemap.Batch.Draw(win)
-		testText.Draw(win, pixel.IM)
+
+		toolTip.Draw(win, pixel.IM)
+		testDraw.Draw(win)
+
+		for h, _ := range hexGrid {
+			t := rsfont.NewText(h.ToPixel(), 12)
+			fmt.Fprintf(t, "%+d, %+d", h.Q, h.R)
+			t.Draw(win, pixel.IM)
+		}
+
 		win.Update()
 
 		frames++
