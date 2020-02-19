@@ -27,7 +27,7 @@ var (
 )
 
 func init() {
-	hex.Size = pixel.V(16, 16)
+	hex.Size = pixel.V(64, 64)
 }
 
 func run() {
@@ -48,8 +48,8 @@ func run() {
 
 	testDraw.Color = colornames.Black
 
+	t := rsfont.NewText(pixel.ZV, 18)
 	hexGrid := hex.Grid(5, 5)
-
 	for h, _ := range hexGrid {
 		corners := h.Corners()
 		for _, c := range corners {
@@ -57,6 +57,9 @@ func run() {
 		}
 		testDraw.Push(corners[0])
 		testDraw.Line(1)
+
+		t.Dot = h.ToPixel()
+		fmt.Fprintf(t, "%+d, %+d", h.Q, h.R)
 	}
 
 	var (
@@ -72,27 +75,22 @@ func run() {
 		cam := zoomAndScroll(win, dt)
 		win.SetMatrix(cam)
 
-		//		if win.JustPressed(pixelgl.MouseButtonLeft) {
-		//			tile := tilemap.Random()
-		//			mouse := cam.Unproject(win.MousePosition())
-		//			tile.Draw(tilemap.Batch, pixel.IM.Moved(mouse))
-		//		}
+		mousePos := win.MousePosition()
+		unProj := cam.Unproject(mousePos)
+		hCoords := hex.FromPixel(unProj)
 
 		toolTip.Clear()
-		mousePos := win.MousePosition()
-		toolTip.Orig = cam.Unproject(mousePos)
-		fmt.Fprintf(toolTip, "(%.f, %.f)", mousePos.X, mousePos.Y)
+		toolTip.Orig = mousePos
+		fmt.Fprintf(toolTip, "(%.f, %.f)\n(%.f, %.f)\n(%+d, %+d)",
+			mousePos.X, mousePos.Y, unProj.X, unProj.Y, hCoords.Q, hCoords.R)
 
 		win.Clear(colornames.Aliceblue)
 
-		toolTip.Draw(win, pixel.IM)
 		testDraw.Draw(win)
+		t.Draw(win, pixel.IM)
 
-		for h, _ := range hexGrid {
-			t := rsfont.NewText(h.ToPixel(), 12)
-			fmt.Fprintf(t, "%+d, %+d", h.Q, h.R)
-			t.Draw(win, pixel.IM)
-		}
+		win.SetMatrix(pixel.IM)
+		toolTip.Draw(win, pixel.IM)
 
 		win.Update()
 

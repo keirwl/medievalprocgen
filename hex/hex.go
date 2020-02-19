@@ -38,8 +38,9 @@ var (
 )
 
 type Hex struct {
-	Q, R   int
-	Qf, Rf float64
+	Q, R    int
+	corners [6]pixel.Vec
+	centre  pixel.Vec
 }
 
 func (h *Hex) String() string {
@@ -82,20 +83,31 @@ func hex_round(q, r float64) (int, int) {
 }
 
 func (h *Hex) ToPixel() pixel.Vec {
-	return pixel.Vec{
+	if h.centre != pixel.ZV {
+		return h.centre
+	}
+
+	centre := pixel.Vec{
 		X: Origin.X + (Size.X * (toPixel[0]*float64(h.Q) + toPixel[1]*float64(h.R))),
 		Y: Origin.Y + (Size.Y * (toPixel[2]*float64(h.Q) + toPixel[3]*float64(h.R))),
 	}
+	h.centre = centre
+	return centre
 }
 
 func (h *Hex) Corners() [6]pixel.Vec {
 	corners := [6]pixel.Vec{}
+	if h.corners != corners {
+		return h.corners
+	}
+
 	centre := h.ToPixel()
 
 	for i := 0; i < 6; i++ {
 		offset := hex_corner_offset(i)
 		corners[i] = pixel.V(centre.X+offset.X, centre.Y+offset.Y)
 	}
+	h.corners = corners
 	return corners
 }
 
