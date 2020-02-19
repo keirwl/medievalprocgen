@@ -8,6 +8,8 @@ import (
 	_ "image/png"
 
 	"github.com/faiface/pixel"
+
+	"../hex"
 )
 
 const (
@@ -20,9 +22,35 @@ const (
 
 var (
 	spritesheet pixel.Picture
-	tiles       = make([]pixel.Rect, Max)
+	sprites     = make([]*pixel.Sprite, Max)
 	Batch       *pixel.Batch
 )
+
+type Tile struct {
+	hex.Hex
+	Type   TileType
+	Sprite *pixel.Sprite
+	Rect   pixel.Rect
+}
+
+func New(q int, r int, t TileType) Tile {
+	tile := Tile{
+		hex.Hex{Q: q, R: r},
+		t,
+		sprites[t],
+		pixel.Rect{},
+	}
+
+	c := tile.ToPixel()
+	tile.Rect = pixel.R(
+		c.X-tileWidth/2,
+		c.Y-tileHeight/2,
+		c.X+tileWidth/2,
+		c.Y+tileFullH-tileHeight/2,
+	)
+
+	return tile
+}
 
 func init() {
 	var err error
@@ -31,12 +59,13 @@ func init() {
 		panic(err)
 	}
 
-	var t TileType
+	sprites[None] = pixel.NewSprite(spritesheet, pixel.ZR)
+	var t TileType = Grass
 outer:
 	for y := spritesheet.Bounds().Max.Y; y > spritesheet.Bounds().Min.Y; y -= tileFullH {
 		for x := spritesheet.Bounds().Min.X; x < spritesheet.Bounds().Max.X; x += tileWidth {
 
-			tiles[t] = pixel.R(x, y-tileFullH, x+tileWidth, y)
+			sprites[t] = pixel.NewSprite(spritesheet, pixel.R(x, y-tileFullH, x+tileWidth, y))
 			t++
 			if t >= Max {
 				break outer
@@ -48,11 +77,11 @@ outer:
 }
 
 func Sprite(t TileType) *pixel.Sprite {
-	return pixel.NewSprite(spritesheet, tiles[t])
+	return sprites[t]
 }
 
 func Random() *pixel.Sprite {
-	return Sprite(TileType(rand.Intn(int(Max))))
+	return Sprite(TileType(rand.Intn(int(Max-1)) + 1))
 }
 
 func loadPicture(path string) (pixel.Picture, error) {

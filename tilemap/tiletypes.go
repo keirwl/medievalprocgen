@@ -2,8 +2,11 @@ package tilemap
 
 type TileType int
 
+//go:generate stringer -type=TileType
+
 const (
-	Grass TileType = iota
+	None TileType = iota
+	Grass
 	GrassTrees
 	GrassForest
 	GrassHills
