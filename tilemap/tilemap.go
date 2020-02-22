@@ -52,6 +52,58 @@ func New(q int, r int, t TileType) Tile {
 	return tile
 }
 
+func RandTile(q, r int) Tile {
+	return New(q, r, TileType(rand.Intn(int(Max-1))+1))
+}
+
+func (t Tile) Draw(target pixel.Target, matrix pixel.Matrix) {
+	t.Sprite.Draw(target, matrix.Moved(t.Rect.Min))
+}
+
+type Map struct {
+	tiles  [][]Tile
+	height int
+	width  int
+}
+
+func MakeMap(height, width int) *Map {
+	m := &Map{height: height, width: width}
+	m.tiles = make([][]Tile, height)
+
+	for row := 0; row < height; row++ {
+		m.tiles[row] = make([]Tile, width)
+
+		for col := 0; col < width; col++ {
+			q, r := hex.ToAxial(col, row)
+			m.tiles[row][col] = RandTile(q, r)
+		}
+	}
+
+	return m
+}
+
+func (m *Map) At(q, r int) Tile {
+	col, row := hex.ToOffset(q, r)
+	return m.tiles[row][col]
+}
+
+func (m *Map) SetTileType(q, r int, t TileType) {
+	col, row := hex.ToOffset(q, r)
+	m.tiles[row][col].Type = t
+	m.tiles[row][col].Sprite = sprites[t]
+}
+
+func (m *Map) Draw(t pixel.Target, matrix pixel.Matrix) {
+	for row := m.height - 1; row >= 0; row-- {
+		for col := 0; col < m.width; col += 2 {
+			m.tiles[row][col].Draw(t, matrix)
+		}
+		for col := 1; col < m.width; col += 2 {
+			m.tiles[row][col].Draw(t, matrix)
+		}
+	}
+}
+
 func init() {
 	var err error
 	spritesheet, err = loadPicture(tilesetFilename)

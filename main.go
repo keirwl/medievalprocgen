@@ -6,12 +6,12 @@ import (
 	"time"
 
 	"github.com/faiface/pixel"
-	"github.com/faiface/pixel/imdraw"
 	"github.com/faiface/pixel/pixelgl"
 	"golang.org/x/image/colornames"
 
 	"./hex"
 	"./rsfont"
+	"./tilemap"
 )
 
 const (
@@ -27,7 +27,7 @@ var (
 )
 
 func init() {
-	hex.Size = pixel.V(64, 64)
+	hex.Size = pixel.V(16, 16)
 }
 
 func run() {
@@ -36,6 +36,7 @@ func run() {
 		Title:     "Keir's Medieval Simulator",
 		Bounds:    pixel.R(0, 0, screenWidth, screenHeight),
 		Resizable: true,
+		VSync:     true,
 	}
 	win, err := pixelgl.NewWindow(cfg)
 	if err != nil {
@@ -44,23 +45,8 @@ func run() {
 
 	toolTip := rsfont.NewText(pixel.ZV, 22)
 
-	testDraw := imdraw.New(nil)
-
-	testDraw.Color = colornames.Black
-
-	t := rsfont.NewText(pixel.ZV, 18)
-	hexGrid := hex.Grid(5, 5)
-	for h, _ := range hexGrid {
-		corners := h.Corners()
-		for _, c := range corners {
-			testDraw.Push(c)
-		}
-		testDraw.Push(corners[0])
-		testDraw.Line(1)
-
-		t.Dot = h.ToPixel()
-		fmt.Fprintf(t, "%+d, %+d", h.Q, h.R)
-	}
+	tileMap := tilemap.MakeMap(15, 15)
+	tileMap.Draw(tilemap.Batch, pixel.IM)
 
 	var (
 		frames = 0
@@ -78,16 +64,21 @@ func run() {
 		mousePos := win.MousePosition()
 		unProj := cam.Unproject(mousePos)
 		hCoords := hex.FromPixel(unProj)
+		col, row := hCoords.ToOffset()
+
+		t := ""
+		if col >= 0 && col < 15 && row >= 0 && row < 15 {
+			t = tileMap.At(hCoords.Q, hCoords.R).Type.String()
+		}
 
 		toolTip.Clear()
 		toolTip.Orig = mousePos
-		fmt.Fprintf(toolTip, "(%.f, %.f)\n(%.f, %.f)\n(%+d, %+d)",
-			mousePos.X, mousePos.Y, unProj.X, unProj.Y, hCoords.Q, hCoords.R)
+		fmt.Fprintf(toolTip, "(%.f, %.f)(%.f, %.f)\n(%+d, %+d)(%+d, %+d)\n%s",
+			mousePos.X, mousePos.Y, unProj.X, unProj.Y, hCoords.Q, hCoords.R, col, row, t)
 
 		win.Clear(colornames.Aliceblue)
 
-		testDraw.Draw(win)
-		t.Draw(win, pixel.IM)
+		tilemap.Batch.Draw(win)
 
 		win.SetMatrix(pixel.IM)
 		toolTip.Draw(win, pixel.IM)

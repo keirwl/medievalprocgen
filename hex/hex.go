@@ -59,11 +59,15 @@ func FromPixel(p pixel.Vec) *Hex {
 
 	q := toHex[0]*pt.X + toHex[1]*pt.Y
 	r := toHex[2]*pt.X + toHex[3]*pt.Y
-	qi, ri := hex_round(q, r)
+	qi, ri := hexRound(q, r)
 	return &Hex{Q: qi, R: ri}
 }
 
-func hex_round(q, r float64) (int, int) {
+func FromOffset(col, row int) *Hex {
+	return &Hex{Q: col, R: row - (col+1*(col&1))/2}
+}
+
+func hexRound(q, r float64) (int, int) {
 	s := -q - r
 	qi := int(math.Round(q))
 	ri := int(math.Round(r))
@@ -95,6 +99,18 @@ func (h *Hex) ToPixel() pixel.Vec {
 	return centre
 }
 
+func (h *Hex) ToOffset() (int, int) {
+	return h.Q, h.R + (h.Q+1*(h.Q&1))/2
+}
+
+func ToOffset(q, r int) (int, int) {
+	return q, r + (q+1*(q&1))/2
+}
+
+func ToAxial(col, row int) (int, int) {
+	return col, row - (col+1*(col&1))/2
+}
+
 func (h *Hex) Corners() [6]pixel.Vec {
 	corners := [6]pixel.Vec{}
 	if h.corners != corners {
@@ -104,14 +120,14 @@ func (h *Hex) Corners() [6]pixel.Vec {
 	centre := h.ToPixel()
 
 	for i := 0; i < 6; i++ {
-		offset := hex_corner_offset(i)
+		offset := hexCornerOffset(i)
 		corners[i] = pixel.V(centre.X+offset.X, centre.Y+offset.Y)
 	}
 	h.corners = corners
 	return corners
 }
 
-func hex_corner_offset(corner int) pixel.Vec {
+func hexCornerOffset(corner int) pixel.Vec {
 	angle := 2.0 * math.Pi * float64(corner) / 6.0
 	return pixel.V(Size.X*math.Cos(angle), Size.Y*math.Sin(angle))
 }
