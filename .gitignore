@@ -1,6 +1,9 @@
 medieval
 assets/
 
+# Go generated files
+*_string.go
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
