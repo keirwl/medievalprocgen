@@ -5,12 +5,14 @@ import (
 	"math"
 
 	"github.com/faiface/pixel"
+
+	"../config"
 )
 
 const sqrt3 = 1.7320508075688772
 
 var (
-	Size   pixel.Vec
+	Size   = pixel.V(config.Tileset.Size, config.Tileset.Size)
 	Origin pixel.Vec
 
 	dirHexes = []*Hex{

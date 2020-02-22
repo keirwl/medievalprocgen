@@ -1,0 +1,15 @@
+{
+	"camera": {
+		"Speed": 500.0,
+		"MaxZoom": 10.0,
+		"ZoomSpeed": 1.2,
+		"FPS": 100
+	},
+	"tileset": {
+		"filename": "assets/fantasyhextiles_v3.png",
+		"width": 32,
+		"height": 24,
+		"fullHeight": 48,
+		"size": 16
+	}
+}

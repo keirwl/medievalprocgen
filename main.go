@@ -9,26 +9,21 @@ import (
 	"github.com/faiface/pixel/pixelgl"
 	"golang.org/x/image/colornames"
 
+	"./config"
 	"./hex"
 	"./rsfont"
 	"./tilemap"
 )
 
 const (
-	camSpeed     = 500.0
-	minZoom      = 1.0
-	maxZoom      = 10.0
-	camZoomSpeed = 1.2
+	minZoom = 1.0
 )
 
 var (
-	camPos  = pixel.ZV
-	camZoom = minZoom
+	camPos     = pixel.ZV
+	camZoom    = minZoom
+	msPerFrame = time.Millisecond * time.Duration(1000/config.Camera.FPS)
 )
-
-func init() {
-	hex.Size = pixel.V(16, 16)
-}
 
 func run() {
 	screenWidth, screenHeight := pixelgl.PrimaryMonitor().Size()
@@ -36,7 +31,6 @@ func run() {
 		Title:     "Keir's Medieval Simulator",
 		Bounds:    pixel.R(0, 0, screenWidth, screenHeight),
 		Resizable: true,
-		VSync:     true,
 	}
 	win, err := pixelgl.NewWindow(cfg)
 	if err != nil {
@@ -55,10 +49,11 @@ func run() {
 	)
 
 	for !win.Closed() {
-		dt := time.Since(last).Seconds()
+		dt := time.Since(last)
+		time.Sleep(msPerFrame - dt)
 		last = time.Now()
 
-		cam := zoomAndScroll(win, dt)
+		cam := zoomAndScroll(win, dt.Seconds())
 		win.SetMatrix(cam)
 
 		mousePos := win.MousePosition()
@@ -96,23 +91,18 @@ func run() {
 }
 
 func zoomAndScroll(win *pixelgl.Window, dt float64) pixel.Matrix {
-	camZoom *= math.Pow(camZoomSpeed, win.MouseScroll().Y)
-	if camZoom < minZoom {
-		camZoom = minZoom
-	}
-	if camZoom > maxZoom {
-		camZoom = maxZoom
-	}
+	camZoom *= math.Pow(config.Camera.ZoomSpeed, win.MouseScroll().Y)
+	camZoom = pixel.Clamp(camZoom, minZoom, config.Camera.MaxZoom)
 
 	switch {
 	case win.Pressed(pixelgl.KeyLeft):
-		camPos.X -= camSpeed * dt
+		camPos.X -= config.Camera.Speed * dt / camZoom
 	case win.Pressed(pixelgl.KeyRight):
-		camPos.X += camSpeed * dt
+		camPos.X += config.Camera.Speed * dt / camZoom
 	case win.Pressed(pixelgl.KeyDown):
-		camPos.Y -= camSpeed * dt
+		camPos.Y -= config.Camera.Speed * dt / camZoom
 	case win.Pressed(pixelgl.KeyUp):
-		camPos.Y += camSpeed * dt
+		camPos.Y += config.Camera.Speed * dt / camZoom
 	}
 
 	return pixel.IM.Scaled(camPos, camZoom).Moved(win.Bounds().Center().Sub(camPos))

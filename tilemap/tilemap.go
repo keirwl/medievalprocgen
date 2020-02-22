@@ -9,15 +9,8 @@ import (
 
 	"github.com/faiface/pixel"
 
+	"../config"
 	"../hex"
-)
-
-const (
-	tilesetFilename = "assets/fantasyhextiles_v3.png"
-	tileWidth       = 32
-	tileHeight      = 24
-	tileFullH       = 48
-	tileSide        = 16
 )
 
 var (
@@ -43,10 +36,10 @@ func New(q int, r int, t TileType) Tile {
 
 	c := tile.ToPixel()
 	tile.Rect = pixel.R(
-		c.X-tileWidth/2,
-		c.Y-tileHeight/2,
-		c.X+tileWidth/2,
-		c.Y+tileFullH-tileHeight/2,
+		c.X-config.Tileset.Width/2.0,
+		c.Y-config.Tileset.Height/2.0,
+		c.X+config.Tileset.Width/2.0,
+		c.Y+config.Tileset.FullH-config.Tileset.Height/2.0,
 	)
 
 	return tile
@@ -105,8 +98,7 @@ func (m *Map) Draw(t pixel.Target, matrix pixel.Matrix) {
 }
 
 func init() {
-	var err error
-	spritesheet, err = loadPicture(tilesetFilename)
+	spritesheet, err := loadPicture(config.Tileset.Filename)
 	if err != nil {
 		panic(err)
 	}
@@ -114,10 +106,10 @@ func init() {
 	sprites[None] = pixel.NewSprite(spritesheet, pixel.ZR)
 	var t TileType = Grass
 outer:
-	for y := spritesheet.Bounds().Max.Y; y > spritesheet.Bounds().Min.Y; y -= tileFullH {
-		for x := spritesheet.Bounds().Min.X; x < spritesheet.Bounds().Max.X; x += tileWidth {
+	for y := spritesheet.Bounds().Max.Y; y > spritesheet.Bounds().Min.Y; y -= config.Tileset.FullH {
+		for x := spritesheet.Bounds().Min.X; x < spritesheet.Bounds().Max.X; x += config.Tileset.Width {
 
-			sprites[t] = pixel.NewSprite(spritesheet, pixel.R(x, y-tileFullH, x+tileWidth, y))
+			sprites[t] = pixel.NewSprite(spritesheet, pixel.R(x, y-config.Tileset.FullH, x+config.Tileset.Width, y))
 			t++
 			if t >= Max {
 				break outer
